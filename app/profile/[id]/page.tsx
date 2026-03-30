@@ -39,15 +39,16 @@ const getMockProfile = (id: string) => ({
   ],
 });
 
-export default async function ProfilePage({ params }: { params: { id: string } }) {
+export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
     redirect("/");
   }
 
-  const profile = getMockProfile(params.id);
-  const isOwnProfile = (session.user as { id?: string }).id === params.id;
+  const { id } = await params;
+  const profile = getMockProfile(id);
+  const isOwnProfile = (session.user as { id?: string }).id === id;
 
   return (
     <div className="min-h-screen bg-tech-dark text-white">

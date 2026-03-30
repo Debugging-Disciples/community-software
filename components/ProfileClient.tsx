@@ -149,7 +149,7 @@ export function ProfileClient({ profile, isOwnProfile }: { profile: Profile; isO
           </div>
           <blockquote className="mt-3 text-gray-200 italic text-sm">
             <span className="text-brand-cyan text-xl leading-none">&ldquo;</span>
-            {profile.faithJourney.replace(/^"|"$/g, "")}
+            {profile.faithJourney}
             <span className="text-brand-cyan text-xl leading-none">&rdquo;</span>
           </blockquote>
         </div>
