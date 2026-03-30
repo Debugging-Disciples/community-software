@@ -2,156 +2,16 @@
 
 import { useState, useMemo } from "react";
 import { Session } from "next-auth";
+import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
-import { ResourceCard, Resource } from "@/components/ResourceCard";
-
-// ---------------------------------------------------------------------------
-// Mock data
-// ---------------------------------------------------------------------------
-
-const MOCK_RESOURCES: Resource[] = [
-  {
-    id: "1",
-    title: "10 Career Lessons Every Christian Engineer Should Know",
-    category: "Career & Growth",
-    categoryEmoji: "📚",
-    categoryColor: "border-tech-blue/30 hover:border-tech-blue",
-    source: "Gospel Coalition",
-    author: "Tim Keller",
-    description:
-      "Practical wisdom on navigating your engineering career with faith and integrity. Learn how to make decisions that honor God in a competitive industry.",
-    url: "#",
-    readTime: 8,
-    views: 342,
-    shares: 23,
-  },
-  {
-    id: "2",
-    title: "The Theology of Work: Why Your Job Matters to God",
-    category: "Faith & Theology",
-    categoryEmoji: "✝️",
-    categoryColor: "border-brand-purple/30 hover:border-brand-purple",
-    source: "Desiring God",
-    author: "John Piper",
-    description:
-      "Exploring the biblical foundation for why ordinary work has eternal significance. A deep dive into vocation, calling, and the Christian's role in culture.",
-    url: "#",
-    readTime: 12,
-    views: 891,
-    shares: 67,
-  },
-  {
-    id: "3",
-    title: "Faith at Work: Integrating Your Beliefs Into the Office",
-    category: "Faith & Work Integration",
-    categoryEmoji: "💼",
-    categoryColor: "border-brand-cyan/30 hover:border-brand-cyan",
-    source: "Christianity Today",
-    author: "Amy Sherman",
-    description:
-      "Practical strategies for bringing your whole self to the workplace — faith included. From lunch conversations to ethical dilemmas, real examples and guidance.",
-    url: "#",
-    readTime: 6,
-    views: 514,
-    shares: 41,
-  },
-  {
-    id: "4",
-    title: "Free Resources for Learning System Design in 2025",
-    category: "Learning & Skill Development",
-    categoryEmoji: "🎓",
-    categoryColor: "border-tech-blue/30 hover:border-tech-blue",
-    source: "roadmap.sh",
-    author: "Community",
-    description:
-      "A curated list of free system design resources, videos, articles, and practice problems to level up your engineering skills this year.",
-    url: "#",
-    readTime: 5,
-    views: 1203,
-    shares: 98,
-  },
-  {
-    id: "5",
-    title: "Every Good Endeavor — Book Summary",
-    category: "Books & Reading",
-    categoryEmoji: "📖",
-    categoryColor: "border-brand-purple/30 hover:border-brand-purple",
-    source: "Medium",
-    author: "Sarah Mitchell",
-    description:
-      "A thorough summary of Tim Keller's landmark book on connecting your faith with your work. Perfect for those short on time but long on curiosity.",
-    url: "#",
-    readTime: 10,
-    views: 427,
-    shares: 35,
-  },
-  {
-    id: "6",
-    title: "Interview: How I Kept My Faith While Scaling a Startup",
-    category: "Faith & Work Integration",
-    categoryEmoji: "💼",
-    categoryColor: "border-brand-cyan/30 hover:border-brand-cyan",
-    source: "Praxis Journal",
-    author: "David Park",
-    description:
-      "A candid founder interview exploring the tensions between growth-at-all-costs culture and values-driven leadership. Honest, raw, and inspiring.",
-    url: "#",
-    readTime: 7,
-    views: 263,
-    shares: 19,
-  },
-  {
-    id: "7",
-    title: "Podcast: Technology, Ethics & the Christian Mind",
-    category: "Videos & Podcasts",
-    categoryEmoji: "🎥",
-    categoryColor: "border-brand-cyan/30 hover:border-brand-cyan",
-    source: "The Rise & Fall of Mars Hill",
-    author: "Mike Cosper",
-    description:
-      "Episode exploring how Christians in tech can engage ethically with AI, social media algorithms, and the digital commons. Thoughtful and convicting.",
-    url: "#",
-    readTime: 45,
-    views: 752,
-    shares: 53,
-  },
-  {
-    id: "8",
-    title: "The Ruthless Elimination of Hurry — Review",
-    category: "Books & Reading",
-    categoryEmoji: "📖",
-    categoryColor: "border-brand-purple/30 hover:border-brand-purple",
-    source: "Gospel-Centered Life",
-    author: "Mark Chen",
-    description:
-      "A review of John Mark Comer's spiritual formation book and its lessons for burnt-out Christian engineers. Rest, sabbath, and sustainable work rhythms.",
-    url: "#",
-    readTime: 9,
-    views: 388,
-    shares: 28,
-  },
-  {
-    id: "9",
-    title: "Getting a Tech Job After a Career Break — A Christian's Story",
-    category: "Career & Growth",
-    categoryEmoji: "📚",
-    categoryColor: "border-tech-blue/30 hover:border-tech-blue",
-    source: "LinkedIn",
-    author: "Jessica Torres",
-    description:
-      "How one Debugging Disciples member trusted God through a year of unemployment, then landed their dream role. Encouragement and practical tips.",
-    url: "#",
-    readTime: 4,
-    views: 618,
-    shares: 74,
-  },
-];
+import { ResourceCard } from "@/components/ResourceCard";
+import { MOCK_RESOURCES, type ResourceCategory } from "@/lib/resources";
 
 // ---------------------------------------------------------------------------
 // Category definitions
 // ---------------------------------------------------------------------------
 
-const CATEGORIES = [
+const CATEGORIES: { id: string; label: string; emoji: string }[] = [
   { id: "all", label: "All Resources", emoji: "" },
   { id: "Career & Growth", label: "Career & Growth", emoji: "📚" },
   { id: "Faith & Theology", label: "Faith & Theology", emoji: "✝️" },
@@ -175,9 +35,10 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 
 interface ResourcesClientProps {
   session: Session;
+  isAdmin?: boolean;
 }
 
-export function ResourcesClient({ session }: ResourcesClientProps) {
+export function ResourcesClient({ session, isAdmin = false }: ResourcesClientProps) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [sortKey, setSortKey] = useState<SortKey>("recent");
   const [search, setSearch] = useState("");
@@ -186,7 +47,7 @@ export function ResourcesClient({ session }: ResourcesClientProps) {
     let result = MOCK_RESOURCES;
 
     if (activeCategory !== "all") {
-      result = result.filter((r) => r.category === activeCategory);
+      result = result.filter((r) => r.category === (activeCategory as ResourceCategory));
     }
 
     if (search.trim()) {
@@ -203,7 +64,8 @@ export function ResourcesClient({ session }: ResourcesClientProps) {
     const sorted = [...result];
     if (sortKey === "views") sorted.sort((a, b) => b.views - a.views);
     else if (sortKey === "shares") sorted.sort((a, b) => b.shares - a.shares);
-    // "recent" preserves insertion order (index order = most recently added first)
+    // "recent" — addedAt descending
+    else sorted.sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime());
 
     return sorted;
   }, [activeCategory, sortKey, search]);
@@ -225,10 +87,20 @@ export function ResourcesClient({ session }: ResourcesClientProps) {
       {/* Sticky sub-nav */}
       <div className="sticky top-0 z-10 border-b border-white/10 bg-tech-darker/90 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-6">
-          {/* Hub title + sort row */}
-          <div className="flex items-center justify-between gap-4 py-3">
-            <span className="text-sm font-semibold text-white/80 shrink-0">Resources Hub</span>
-            <div className="flex items-center gap-2">
+          {/* Hub title + sort + admin row */}
+          <div className="flex items-center justify-between gap-4 py-3 flex-wrap">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-semibold text-white/80 shrink-0">Resources Hub</span>
+              {isAdmin && (
+                <Link
+                  href="/resources/admin"
+                  className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-brand-purple/20 text-brand-purple hover:bg-brand-purple/30 transition-colors font-medium"
+                >
+                  ⚙️ Admin
+                </Link>
+              )}
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs text-gray-500 shrink-0">Sort:</span>
               {SORT_OPTIONS.map(({ key, label }) => (
                 <button
@@ -315,9 +187,7 @@ export function ResourcesClient({ session }: ResourcesClientProps) {
           <div className="flex flex-col items-center gap-3 py-20 text-center">
             <span className="text-5xl">🔍</span>
             <p className="text-lg font-semibold text-white/70">No resources found</p>
-            <p className="text-sm text-gray-500">
-              Try a different search term or category.
-            </p>
+            <p className="text-sm text-gray-500">Try a different search term or category.</p>
             <button
               onClick={() => {
                 setSearch("");

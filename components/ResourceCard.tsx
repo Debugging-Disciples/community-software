@@ -2,23 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import type { Resource } from "@/lib/resources";
 
-export interface Resource {
-  id: string;
-  title: string;
-  category: string;
-  categoryEmoji: string;
-  categoryColor: string;
-  source: string;
-  author: string;
-  description: string;
-  thumbnail?: string;
-  url: string;
-  readTime: number;
-  views: number;
-  shares: number;
-  saved?: boolean;
-}
+export type { Resource };
 
 interface ResourceCardProps {
   resource: Resource;

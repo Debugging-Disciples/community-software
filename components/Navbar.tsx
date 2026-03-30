@@ -36,7 +36,9 @@ export function Navbar({ user }: NavbarProps) {
 
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-none mx-4">
           {navLinks.map(({ href, label }) => {
-            const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+            const isActive =
+              pathname === href ||
+              (href !== "/dashboard" && pathname.startsWith(href + "/"));
             return (
               <Link
                 key={href}
