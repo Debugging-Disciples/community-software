@@ -28,6 +28,24 @@ export function Navbar({ user }: NavbarProps) {
           >
             Dashboard
           </Link>
+          <Link
+            href="/qa"
+            className="text-gray-400 hover:text-brand-cyan transition-colors text-sm"
+          >
+            Q&amp;A
+          </Link>
+          <Link
+            href="/directory"
+            className="text-gray-400 hover:text-brand-cyan transition-colors text-sm"
+          >
+            Directory
+          </Link>
+          <Link
+            href="/events"
+            className="text-gray-400 hover:text-brand-cyan transition-colors text-sm"
+          >
+            Events
+          </Link>
 
           {user && (
             <div className="flex items-center gap-3">
