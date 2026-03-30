@@ -28,6 +28,18 @@ export function Navbar({ user }: NavbarProps) {
           >
             Dashboard
           </Link>
+          <Link
+            href="/leaderboard"
+            className="text-gray-400 hover:text-brand-cyan transition-colors text-sm"
+          >
+            Leaderboard
+          </Link>
+          <Link
+            href="/prayer"
+            className="text-gray-400 hover:text-brand-cyan transition-colors text-sm"
+          >
+            Prayer
+          </Link>
 
           {user && (
             <div className="flex items-center gap-3">
