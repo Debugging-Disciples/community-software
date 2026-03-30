@@ -4,6 +4,7 @@ import { Session } from "next-auth";
 import { StatsGrid } from "@/components/StatsGrid";
 import { BadgesSection } from "@/components/BadgesSection";
 import { ActivityFeed } from "@/components/ActivityFeed";
+import { EngagementScore } from "@/components/EngagementScore";
 import { Navbar } from "@/components/Navbar";
 
 // Mock data for demonstration - in production this comes from Slack bot
@@ -24,12 +25,32 @@ const mockActivities = [
   { id: "5", type: "prayer" as const, content: "Shared a praise report", time: "1 week ago" },
 ];
 
+// All badge types grouped by category
 const mockBadges = [
-  { id: "1", emoji: "🔥", name: "On Fire", description: "10+ day engagement streak", color: "brand-cyan" },
-  { id: "2", emoji: "🙏", name: "Prayer Warrior", description: "10+ prayer requests shared", color: "brand-purple" },
-  { id: "3", emoji: "📖", name: "Bible Scholar", description: "20+ Bible study sessions", color: "brand-purple" },
-  { id: "4", emoji: "❓", name: "Question Master", description: "Asked 5+ great questions", color: "tech-blue" },
+  // Engagement Badges
+  { id: "e1", emoji: "🔥", name: "On Fire", description: "10+ day engagement streak", color: "brand-cyan" },
+  { id: "e2", emoji: "🙏", name: "Prayer Warrior", description: "10+ prayer requests shared", color: "brand-purple" },
+  { id: "e3", emoji: "❓", name: "Question Master", description: "Asked 5+ great questions", color: "tech-blue" },
+  { id: "e4", emoji: "💬", name: "Community Voice", description: "150+ messages sent", color: "gradient-cyan-purple" },
+  { id: "e5", emoji: "👑", name: "Longest Member", description: "One of the founding members", color: "gradient-gold" },
+  // Achievement Badges
+  { id: "a1", emoji: "📖", name: "Bible Scholar", description: "20+ Bible study sessions", color: "brand-purple" },
+  { id: "a2", emoji: "💼", name: "Career Builder", description: "Shared career guidance resources", color: "tech-blue" },
+  { id: "a3", emoji: "🤝", name: "Mentor", description: "Actively mentored community members", color: "brand-cyan" },
+  { id: "a4", emoji: "🌱", name: "New to DD", description: "Recently joined the community", color: "outline-cyan" },
+  { id: "a5", emoji: "🎓", name: "First Prayer Request", description: "Shared your first prayer request", color: "brand-cyan-glow" },
+  // Role Badges
+  { id: "r1", emoji: "👨‍💼", name: "Community Leader", description: "Recognized community leader", color: "brand-purple" },
+  { id: "r2", emoji: "🛠️", name: "Core Team", description: "Part of the core team", color: "gradient-cyan-blue" },
+  { id: "r3", emoji: "✨", name: "Member Spotlight", description: "Featured community spotlight", color: "gradient-purple-cyan-animated" },
 ];
+
+const mockScoreBreakdown = {
+  prayers: 12,
+  questions: 8,
+  bibleStudy: 23,
+  comments: 156,
+};
 
 interface DashboardClientProps {
   session: Session;
@@ -68,6 +89,17 @@ export function DashboardClient({ session }: DashboardClientProps) {
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-white mb-4">Your Engagement</h2>
           <StatsGrid stats={mockStats} />
+        </section>
+
+        {/* Engagement Score */}
+        <section className="mb-8">
+          <h2 className="text-xl font-semibold text-white mb-4">Engagement Score</h2>
+          <EngagementScore
+            score={mockStats.engagementScore}
+            breakdown={mockScoreBreakdown}
+            monthlyRank={8}
+            weeklyTopN={5}
+          />
         </section>
 
         {/* Badges */}
