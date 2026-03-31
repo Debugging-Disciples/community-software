@@ -82,8 +82,12 @@ export function BadgesSection({ badges }: BadgesSectionProps) {
               aria-label={`${badge.name}: ${badge.description}`}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
                   setHoveredId(isHovered ? null : badge.id);
                 }
+              }}
+              onClick={() => {
+                setHoveredId(isHovered ? null : badge.id);
               }}
               style={{
                 background: colors.bg,
