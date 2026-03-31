@@ -393,18 +393,23 @@ export function PrayerClient({ session }: PrayerClientProps) {
     );
   };
 
-  const filteredRequests = requests.filter((r) => {
-    if (activeTab === "my_requests") return !!r.isOwn;
-    const matchesSearch =
-      !searchQuery ||
-      r.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.authorName.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  }).sort((a, b) => {
-    if (activeTab === "most_prayed") return b.prayerCount - a.prayerCount;
-    return 0; // "recent" keeps original order
-  });
+  const filteredRequests = requests
+    .filter((r) => {
+      const matchesSearch =
+        !searchQuery ||
+        r.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        r.authorName.toLowerCase().includes(searchQuery.toLowerCase());
 
+      if (activeTab === "my_requests") {
+        return !!r.isOwn && matchesSearch;
+      }
+
+      return matchesSearch;
+    })
+    .sort((a, b) => {
+      if (activeTab === "most_prayed") return b.prayerCount - a.prayerCount;
+      return 0; // "recent" keeps original order
+    });
   const TABS: { key: TabKey; label: string }[] = [
     { key: "recent", label: "Recent" },
     { key: "most_prayed", label: "Most Prayed For" },
