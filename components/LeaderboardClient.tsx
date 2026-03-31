@@ -531,7 +531,7 @@ export function LeaderboardClient({ session }: LeaderboardClientProps) {
 
       <main className="relative z-10 max-w-5xl mx-auto px-6 py-8">
         {/* Tab Bar */}
-        <div className="flex gap-1 overflow-x-auto pb-2 mb-8 scrollbar-hide">
+        <div className="flex gap-1 overflow-x-auto pb-2 mb-8">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.key;
             return (
