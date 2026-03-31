@@ -51,12 +51,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   const isOwnProfile = (session.user as { id?: string }).id === id;
 
   return (
-    <div className="min-h-screen bg-tech-dark text-white">
+    <div className="min-h-screen bg-tech-dark text-slate-200">
       <div
-        className="fixed inset-0 opacity-30 pointer-events-none"
+        className="fixed inset-0 opacity-20 pointer-events-none"
         style={{
           backgroundImage:
-            "radial-gradient(circle at 25px 25px, rgba(59,130,246,0.15) 1px, transparent 0), radial-gradient(circle at 75px 75px, rgba(139,92,246,0.15) 1px, transparent 0)",
+            "radial-gradient(circle at 25px 25px, rgba(59,130,246,0.10) 1px, transparent 0), radial-gradient(circle at 75px 75px, rgba(139,92,246,0.08) 1px, transparent 0)",
           backgroundSize: "100px 100px",
         }}
       />

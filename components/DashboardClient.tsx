@@ -125,7 +125,7 @@ const ctaCards = [
     href: "#",
   },
   {
-    id: "4",
+    id: "update-profile",
     icon: "👤",
     title: "Update Your Profile",
     description: "Help others get to know you better",
@@ -161,16 +161,21 @@ function MiniAvatar({ image, name }: { image: string | null; name: string }) {
 
 export function DashboardClient({ session, trendingResources }: DashboardClientProps) {
   const user = session.user;
+  const userId = (user as { id?: string }).id;
   const joinDate = "March 2024"; // In production, comes from Slack API
 
+  const resolvedCtaCards = ctaCards.map((card) =>
+    card.id === "update-profile" ? { ...card, href: userId ? `/profile/${userId}` : "#" } : card
+  );
+
   return (
-    <div className="min-h-screen text-white" style={{ background: "linear-gradient(to bottom, #0a0a0a, #000000)" }}>
-      {/* Circuit pattern background */}
+    <div className="min-h-screen text-white" style={{ background: "linear-gradient(160deg, #0f172a 0%, #0b1628 50%, #0f172a 100%)" }}>
+      {/* Subtle background texture */}
       <div
-        className="fixed inset-0 opacity-30 pointer-events-none"
+        className="fixed inset-0 opacity-20 pointer-events-none"
         style={{
           backgroundImage:
-            "radial-gradient(circle at 25px 25px, rgba(59,130,246,0.15) 1px, transparent 0), radial-gradient(circle at 75px 75px, rgba(139,92,246,0.15) 1px, transparent 0)",
+            "radial-gradient(circle at 25px 25px, rgba(59,130,246,0.10) 1px, transparent 0), radial-gradient(circle at 75px 75px, rgba(139,92,246,0.08) 1px, transparent 0)",
           backgroundSize: "100px 100px",
         }}
       />
@@ -181,7 +186,7 @@ export function DashboardClient({ session, trendingResources }: DashboardClientP
         {/* Welcome card */}
         <div
           className="p-6 rounded-2xl border border-white/10"
-          style={{ background: "linear-gradient(to bottom right, rgba(255,255,255,0.05), rgba(255,255,255,0.10))", backdropFilter: "blur(12px)" }}
+          style={{ background: "linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9))", backdropFilter: "blur(12px)" }}
         >
           <h1 className="text-3xl font-bold mb-1">
             <span
@@ -200,8 +205,8 @@ export function DashboardClient({ session, trendingResources }: DashboardClientP
           <div
             className="p-6 rounded-2xl"
             style={{
-              background: "rgba(10,10,10,0.8)",
-              border: "1px solid rgba(6,182,212,0.3)",
+              background: "rgba(30,41,59,0.7)",
+              border: "1px solid rgba(6,182,212,0.25)",
               borderRadius: 16,
             }}
           >
@@ -259,7 +264,7 @@ export function DashboardClient({ session, trendingResources }: DashboardClientP
                 <div
                   key={event.id}
                   className="p-4 rounded-xl border border-white/10 flex items-center gap-3"
-                  style={{ background: "linear-gradient(to right, rgba(6,182,212,0.10), rgba(139,92,246,0.10))", backdropFilter: "blur(8px)" }}
+                  style={{ background: "rgba(30,41,59,0.6)", backdropFilter: "blur(8px)" }}
                 >
                   <span className="text-2xl flex-shrink-0">{event.icon}</span>
                   <div className="flex-1 min-w-0">
@@ -290,7 +295,7 @@ export function DashboardClient({ session, trendingResources }: DashboardClientP
                 🏆 Top Members This Month
               </h2>
             </div>
-            <div className="rounded-2xl overflow-hidden border border-white/10" style={{ background: "rgba(255,255,255,0.03)" }}>
+            <div className="rounded-2xl overflow-hidden border border-white/10" style={{ background: "rgba(30,41,59,0.5)" }}>
               {topMembers.map((member, idx) => (
                 <div
                   key={member.rank}
@@ -330,7 +335,7 @@ export function DashboardClient({ session, trendingResources }: DashboardClientP
         {/* Community Activity Feed */}
         <section>
           <h2 className="text-xl font-semibold text-white mb-4">Community Activity</h2>
-          <div className="rounded-2xl border border-white/10 overflow-hidden" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <div className="rounded-2xl border border-white/10 overflow-hidden" style={{ background: "rgba(30,41,59,0.5)" }}>
             {communityFeed.map((section, sIdx) => (
               <div key={section.id}>
                 {/* Section divider */}
@@ -371,12 +376,12 @@ export function DashboardClient({ session, trendingResources }: DashboardClientP
         <section>
           <h2 className="text-xl font-semibold text-white mb-4">Suggested Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {ctaCards.map((card) => (
+            {resolvedCtaCards.map((card) => (
               <div
                 key={card.id}
                 className="p-5 rounded-2xl border border-white/10 flex flex-col gap-3"
                 style={{
-                  background: "linear-gradient(to bottom right, rgba(6,182,212,0.10), rgba(139,92,246,0.10))",
+                  background: "rgba(30,41,59,0.6)",
                   backdropFilter: "blur(8px)",
                   borderLeftWidth: 3,
                   borderLeftColor: card.accent,
