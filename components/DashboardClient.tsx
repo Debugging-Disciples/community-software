@@ -227,15 +227,15 @@ export function DashboardClient({ session }: DashboardClientProps) {
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-brand-purple">{mockStats.prayerRequests}</p>
-                <p className="text-tech-blue text-xs mt-0.5">🙏 Prayers</p>
+                <p className="text-brand-purple text-xs mt-0.5">🙏 Prayers</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-tech-blue">{mockStats.questionsAsked}</p>
-                <p className="text-brand-cyan text-xs mt-0.5">❓ Questions</p>
+                <p className="text-tech-blue text-xs mt-0.5">❓ Questions</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-brand-cyan">{mockStats.sessionsAttended}</p>
-                <p className="text-brand-purple text-xs mt-0.5">📖 Bible</p>
+                <p className="text-brand-cyan text-xs mt-0.5">📖 Bible</p>
               </div>
             </div>
           </div>
