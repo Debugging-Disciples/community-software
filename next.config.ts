@@ -9,11 +9,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "a.slack-edge.com",
+        hostname: "secure.gravatar.com",
       },
       {
         protocol: "https",
-        hostname: "secure.gravatar.com",
+        hostname: "*.slack-edge.com",
       },
     ],
   },
