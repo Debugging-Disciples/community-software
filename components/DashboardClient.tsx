@@ -5,6 +5,8 @@ import { StatsGrid } from "@/components/StatsGrid";
 import { BadgesSection } from "@/components/BadgesSection";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { Navbar } from "@/components/Navbar";
+import { TrendingResourcesWidget } from "@/components/TrendingResourcesWidget";
+import type { Resource } from "@/lib/resources";
 
 // Mock data for demonstration - in production this comes from Slack bot
 const mockStats = {
@@ -33,9 +35,10 @@ const mockBadges = [
 
 interface DashboardClientProps {
   session: Session;
+  trendingResources: Resource[];
 }
 
-export function DashboardClient({ session }: DashboardClientProps) {
+export function DashboardClient({ session, trendingResources }: DashboardClientProps) {
   const user = session.user;
   const joinDate = "March 2024"; // In production, comes from Slack API
 
@@ -68,6 +71,11 @@ export function DashboardClient({ session }: DashboardClientProps) {
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-white mb-4">Your Engagement</h2>
           <StatsGrid stats={mockStats} />
+        </section>
+
+        {/* Trending Resources */}
+        <section className="mb-8">
+          <TrendingResourcesWidget resources={trendingResources} />
         </section>
 
         {/* Badges */}
