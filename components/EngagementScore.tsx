@@ -105,7 +105,7 @@ export function EngagementScore({
         </span>
         {weeklyTopN !== undefined && (
           <span className="text-brand-purple font-medium text-sm">
-            Top {weeklyTopN} member this week!
+            Top {weeklyTopN} this week!
           </span>
         )}
       </div>
