@@ -34,6 +34,41 @@ export function Navbar({ user }: NavbarProps) {
           <span className="font-bold text-white">Debugging Disciples</span>
         </Link>
 
+        <div className="flex items-center gap-4">
+          <Link
+            href="/dashboard"
+            className="text-gray-400 hover:text-brand-cyan transition-colors text-sm"
+          >
+            Dashboard
+          </Link>
+          <Link
+            href="/leaderboard"
+            className="text-gray-400 hover:text-brand-cyan transition-colors text-sm"
+          >
+            Leaderboard
+          </Link>
+          <Link
+            href="/prayer"
+            className="text-gray-400 hover:text-brand-cyan transition-colors text-sm"
+          >
+            Prayer
+          </Link>
+
+          {user && (
+            <div className="flex items-center gap-3">
+              {user.image && (
+                <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-brand-cyan/50">
+                  <Image
+                    src={user.image}
+                    alt={user.name ?? "User"}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="text-sm text-gray-400 hover:text-white transition-colors"
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-none mx-4">
           {navLinks.map(({ href, label }) => {
             const isActive =
