@@ -13,6 +13,7 @@ interface EngagementScoreProps {
   score: number;
   breakdown: ScoreBreakdown;
   monthlyRank: number;
+  allTimeRank?: number;
   weeklyTopN?: number;
 }
 
@@ -20,6 +21,7 @@ export function EngagementScore({
   score,
   breakdown,
   monthlyRank,
+  allTimeRank,
   weeklyTopN,
 }: EngagementScoreProps) {
   const [period, setPeriod] = useState<"month" | "alltime">("month");
@@ -74,9 +76,10 @@ export function EngagementScore({
         </div>
 
         {/* Period toggle */}
-        <div className="flex gap-4 text-sm mt-1">
+        <div className="flex gap-4 text-sm mt-1" role="group" aria-label="Score period">
           <button
             onClick={() => setPeriod("month")}
+            aria-pressed={period === "month"}
             className={`pb-1 transition-colors ${
               period === "month"
                 ? "text-brand-cyan border-b-2 border-brand-cyan font-semibold"
@@ -87,6 +90,7 @@ export function EngagementScore({
           </button>
           <button
             onClick={() => setPeriod("alltime")}
+            aria-pressed={period === "alltime"}
             className={`pb-1 transition-colors ${
               period === "alltime"
                 ? "text-brand-cyan border-b-2 border-brand-cyan font-semibold"
@@ -100,9 +104,15 @@ export function EngagementScore({
 
       {/* Leaderboard position */}
       <div className="flex flex-wrap items-center gap-3 mb-5">
-        <span className="text-brand-cyan font-medium text-sm">
-          You&apos;re ranked #{monthlyRank} this month
-        </span>
+        {period === "month" ? (
+          <span className="text-brand-cyan font-medium text-sm">
+            You&apos;re ranked #{monthlyRank} this month
+          </span>
+        ) : allTimeRank !== undefined ? (
+          <span className="text-brand-cyan font-medium text-sm">
+            You&apos;re ranked #{allTimeRank} all-time
+          </span>
+        ) : null}
         {weeklyTopN !== undefined && (
           <span className="text-brand-purple font-medium text-sm">
             Top {weeklyTopN} this week!

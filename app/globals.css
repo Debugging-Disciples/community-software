@@ -71,3 +71,11 @@ body {
 .engagement-score-value {
   animation: counter-up 0.6s ease-out forwards;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .badge-flame,
+  .badge-gradient-animated,
+  .engagement-score-value {
+    animation: none;
+  }
+}

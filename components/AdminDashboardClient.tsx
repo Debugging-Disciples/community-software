@@ -115,6 +115,11 @@ function MiniLineGraph({ data, color }: { data: number[]; color: string }) {
 
 function DonutChart({ segments }: { segments: { label: string; value: number; color: string }[] }) {
   const total = segments.reduce((s, seg) => s + seg.value, 0);
+
+  if (segments.length === 0 || total <= 0) {
+    return <p className="text-gray-500 text-sm">No data</p>;
+  }
+
   const r = 36;
   const cx = 50;
   const cy = 50;
@@ -160,7 +165,11 @@ function DonutChart({ segments }: { segments: { label: string; value: number; co
 }
 
 function StackedBar({ items }: { items: { label: string; value: number; color: string }[] }) {
+  if (items.length === 0) {
+    return <p className="text-gray-500 text-sm">No data</p>;
+  }
   const max = Math.max(...items.map((i) => i.value));
+  const safeMax = max > 0 ? max : 1;
   return (
     <div className="space-y-2">
       {items.map((item) => (
@@ -169,7 +178,7 @@ function StackedBar({ items }: { items: { label: string; value: number; color: s
           <div className="flex-1 h-5 rounded bg-white/10 overflow-hidden">
             <div
               className="h-full rounded transition-all duration-700"
-              style={{ width: `${(item.value / max) * 100}%`, background: item.color }}
+              style={{ width: `${(item.value / safeMax) * 100}%`, background: item.color }}
             />
           </div>
           <span className="text-xs w-5 text-right" style={{ color: item.color }}>

@@ -10,9 +10,19 @@ export default async function AdminPage() {
     redirect("/");
   }
 
-  // TODO: Add role-based authorization once user roles are stored in the session.
-  // Only users with an "admin" or "Leader" role should be allowed to access this page.
-  // Example: if (session.user.role !== "admin") redirect("/dashboard");
+  // Temporary authorization: restrict access to a configured allowlist of admin emails.
+  // When roles are available on the session (e.g., session.user.role), replace this with a role check.
+  const adminEmails =
+    process.env.ADMIN_EMAILS
+      ?.split(",")
+      .map((email) => email.trim())
+      .filter(Boolean) ?? [];
+
+  const userEmail = session.user?.email;
+
+  if (!userEmail || (adminEmails.length > 0 && !adminEmails.includes(userEmail))) {
+    redirect("/");
+  }
 
   return <AdminDashboardClient session={session} />;
 }

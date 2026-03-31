@@ -98,6 +98,7 @@ export function DashboardClient({ session }: DashboardClientProps) {
             score={mockStats.engagementScore}
             breakdown={mockScoreBreakdown}
             monthlyRank={8}
+            allTimeRank={23}
             weeklyTopN={5}
           />
         </section>
