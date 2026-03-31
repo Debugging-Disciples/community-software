@@ -36,23 +36,35 @@ export function Navbar({ user }: NavbarProps) {
 
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-none mx-4">
           {navLinks.map(({ href, label }) => {
-            const isActive =
-              pathname === href ||
-              (href !== "/dashboard" && pathname.startsWith(href + "/"));
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-colors ${
-                  isActive
-                    ? "text-brand-cyan bg-brand-cyan/10 font-medium"
-                    : "text-gray-400 hover:text-brand-cyan hover:bg-white/5"
-                }`}
-              >
-                {label}
-              </Link>
-            );
-          })}
+  // 1. Exact match for the current page
+  const isExact = pathname === href;
+  
+  // 2. Nested match: pathname starts with href + '/'
+  // We check for the '/' to avoid matching /settings-old when the link is /settings
+  const isNested = pathname.startsWith(`${href}/`);
+  
+  // 3. Special handling for root/dashboard to avoid highlighting everything
+  const isActive = (href === '/dashboard' || href === '/') 
+    ? isExact 
+    : (isExact || isNested);
+
+  return (
+    <Link
+      key={href}
+      href={href}
+      // Accessibility: Tell screen readers this is the current page
+      aria-current={isActive ? 'page' : undefined}
+      className={`px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-colors ${
+        isActive
+          ? "text-brand-cyan bg-brand-cyan/10 font-medium"
+          : "text-gray-400 hover:text-brand-cyan hover:bg-white/5"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+})}
+
         </div>
 
         {user && (
