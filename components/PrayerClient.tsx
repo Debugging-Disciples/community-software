@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import Image from "next/image";
 import { Session } from "next-auth";
 import { Navbar } from "@/components/Navbar";
@@ -150,7 +150,7 @@ function NewPrayerModal({ onClose }: { onClose: () => void }) {
   const [isPublic, setIsPublic] = useState(true);
   const MAX_CHARS = 500;
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault();
     // In production, submit to API
     onClose();
