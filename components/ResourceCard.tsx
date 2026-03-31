@@ -8,12 +8,24 @@ export type { Resource };
 
 interface ResourceCardProps {
   resource: Resource;
+  onVisit?: (id: string) => void;
+  onSaveToggle?: (id: string, currentlySaved: boolean) => void;
 }
 
 const MAX_DESC_LENGTH = 120;
 
-export function ResourceCard({ resource }: ResourceCardProps) {
+export function ResourceCard({ resource, onVisit, onSaveToggle }: ResourceCardProps) {
   const [saved, setSaved] = useState(resource.saved ?? false);
+
+  function handleVisitClick() {
+    onVisit?.(resource.id);
+  }
+
+  function handleSaveClick() {
+    const next = !saved;
+    setSaved(next);
+    onSaveToggle?.(resource.id, saved);
+  }
 
   const descriptionTruncated =
     resource.description.length > MAX_DESC_LENGTH
@@ -93,12 +105,13 @@ export function ResourceCard({ resource }: ResourceCardProps) {
             href={resource.url}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={handleVisitClick}
             className="flex-1 rounded-lg bg-gradient-to-r from-brand-cyan to-brand-purple px-3 py-1.5 text-center text-xs font-semibold text-white transition-opacity hover:opacity-90"
           >
             Visit Resource
           </a>
           <button
-            onClick={() => setSaved((s) => !s)}
+            onClick={handleSaveClick}
             aria-label={saved ? "Unsave resource" : "Save resource"}
             className={`rounded-lg border px-3 py-1.5 text-xs transition-colors ${
               saved
@@ -112,6 +125,7 @@ export function ResourceCard({ resource }: ResourceCardProps) {
             href={resource.url}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={handleVisitClick}
             aria-label="Open in new tab"
             className="rounded-lg border border-white/20 px-3 py-1.5 text-xs text-gray-400 transition-colors hover:border-brand-cyan/60 hover:text-brand-cyan"
           >

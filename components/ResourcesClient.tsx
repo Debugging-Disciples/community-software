@@ -5,7 +5,7 @@ import { Session } from "next-auth";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { ResourceCard } from "@/components/ResourceCard";
-import { MOCK_RESOURCES, type ResourceCategory } from "@/lib/resources";
+import type { Resource, ResourceCategory } from "@/lib/resources";
 
 // ---------------------------------------------------------------------------
 // Category definitions
@@ -36,18 +36,68 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 interface ResourcesClientProps {
   session: Session;
   isAdmin?: boolean;
+  initialResources: Resource[];
 }
 
-export function ResourcesClient({ session, isAdmin = false }: ResourcesClientProps) {
+export function ResourcesClient({
+  session,
+  isAdmin = false,
+  initialResources,
+}: ResourcesClientProps) {
+  const [resources, setResources] = useState<Resource[]>(initialResources);
   const [activeCategory, setActiveCategory] = useState("all");
   const [sortKey, setSortKey] = useState<SortKey>("recent");
   const [search, setSearch] = useState("");
 
+  // Increment view count when a resource is visited
+  async function handleVisit(id: string) {
+    try {
+      await fetch(`/api/resources/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "increment_views" }),
+      });
+      setResources((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, views: r.views + 1 } : r))
+      );
+    } catch {
+      // Non-critical — ignore silently
+    }
+  }
+
+  // Toggle save (bookmark)
+  async function handleSaveToggle(id: string, currentlySaved: boolean) {
+    try {
+      await fetch(`/api/resources/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: currentlySaved ? "unbookmark" : "bookmark",
+        }),
+      });
+      setResources((prev) =>
+        prev.map((r) =>
+          r.id === id
+            ? {
+                ...r,
+                saved: !currentlySaved,
+                bookmarks: (r.bookmarks ?? 0) + (currentlySaved ? -1 : 1),
+              }
+            : r
+        )
+      );
+    } catch {
+      // Non-critical — ignore silently
+    }
+  }
+
   const filtered = useMemo(() => {
-    let result = MOCK_RESOURCES;
+    let result = resources;
 
     if (activeCategory !== "all") {
-      result = result.filter((r) => r.category === (activeCategory as ResourceCategory));
+      result = result.filter(
+        (r) => r.category === (activeCategory as ResourceCategory)
+      );
     }
 
     if (search.trim()) {
@@ -64,11 +114,14 @@ export function ResourcesClient({ session, isAdmin = false }: ResourcesClientPro
     const sorted = [...result];
     if (sortKey === "views") sorted.sort((a, b) => b.views - a.views);
     else if (sortKey === "shares") sorted.sort((a, b) => b.shares - a.shares);
-    // "recent" — addedAt descending
-    else sorted.sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime());
+    else
+      sorted.sort(
+        (a, b) =>
+          new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()
+      );
 
     return sorted;
-  }, [activeCategory, sortKey, search]);
+  }, [resources, activeCategory, sortKey, search]);
 
   return (
     <div className="min-h-screen bg-tech-dark text-white">
@@ -90,7 +143,9 @@ export function ResourcesClient({ session, isAdmin = false }: ResourcesClientPro
           {/* Hub title + sort + admin row */}
           <div className="flex items-center justify-between gap-4 py-3 flex-wrap">
             <div className="flex items-center gap-3">
-              <span className="text-sm font-semibold text-white/80 shrink-0">Resources Hub</span>
+              <span className="text-sm font-semibold text-white/80 shrink-0">
+                Resources Hub
+              </span>
               {isAdmin && (
                 <Link
                   href="/resources/admin"
@@ -148,13 +203,16 @@ export function ResourcesClient({ session, isAdmin = false }: ResourcesClientPro
               </span>
             </h1>
             <p className="mt-1 text-sm text-gray-400">
-              Curated articles, books, podcasts, and more for the Debugging Disciples community.
+              Curated articles, books, podcasts, and more for the Debugging
+              Disciples community.
             </p>
           </div>
 
           {/* Search */}
           <div className="relative w-full max-w-xs">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">🔍</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+              🔍
+            </span>
             <input
               type="search"
               placeholder="Search resources…"
@@ -169,10 +227,17 @@ export function ResourcesClient({ session, isAdmin = false }: ResourcesClientPro
         <p className="mb-4 text-xs text-gray-500">
           Showing {filtered.length} resource{filtered.length !== 1 ? "s" : ""}
           {activeCategory !== "all" && (
-            <> in <span className="text-brand-cyan">{activeCategory}</span></>
+            <>
+              {" "}
+              in <span className="text-brand-cyan">{activeCategory}</span>
+            </>
           )}
           {search.trim() && (
-            <> matching &ldquo;<span className="text-brand-cyan">{search}</span>&rdquo;</>
+            <>
+              {" "}
+              matching &ldquo;
+              <span className="text-brand-cyan">{search}</span>&rdquo;
+            </>
           )}
         </p>
 
@@ -180,14 +245,23 @@ export function ResourcesClient({ session, isAdmin = false }: ResourcesClientPro
         {filtered.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((resource) => (
-              <ResourceCard key={resource.id} resource={resource} />
+              <ResourceCard
+                key={resource.id}
+                resource={resource}
+                onVisit={handleVisit}
+                onSaveToggle={handleSaveToggle}
+              />
             ))}
           </div>
         ) : (
           <div className="flex flex-col items-center gap-3 py-20 text-center">
             <span className="text-5xl">🔍</span>
-            <p className="text-lg font-semibold text-white/70">No resources found</p>
-            <p className="text-sm text-gray-500">Try a different search term or category.</p>
+            <p className="text-lg font-semibold text-white/70">
+              No resources found
+            </p>
+            <p className="text-sm text-gray-500">
+              Try a different search term or category.
+            </p>
             <button
               onClick={() => {
                 setSearch("");

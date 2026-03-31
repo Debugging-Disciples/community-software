@@ -6,6 +6,7 @@ import { BadgesSection } from "@/components/BadgesSection";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { Navbar } from "@/components/Navbar";
 import { TrendingResourcesWidget } from "@/components/TrendingResourcesWidget";
+import type { Resource } from "@/lib/resources";
 
 // Mock data for demonstration - in production this comes from Slack bot
 const mockStats = {
@@ -34,9 +35,10 @@ const mockBadges = [
 
 interface DashboardClientProps {
   session: Session;
+  trendingResources: Resource[];
 }
 
-export function DashboardClient({ session }: DashboardClientProps) {
+export function DashboardClient({ session, trendingResources }: DashboardClientProps) {
   const user = session.user;
   const joinDate = "March 2024"; // In production, comes from Slack API
 
@@ -73,7 +75,7 @@ export function DashboardClient({ session }: DashboardClientProps) {
 
         {/* Trending Resources */}
         <section className="mb-8">
-          <TrendingResourcesWidget />
+          <TrendingResourcesWidget resources={trendingResources} />
         </section>
 
         {/* Badges */}

@@ -5,9 +5,6 @@ import { Session } from "next-auth";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import {
-  MOCK_RESOURCES,
-  MOCK_PENDING,
-  MOCK_COLLECTIONS,
   REJECT_REASON_LABELS,
   getTopByViews,
   getTopByBookmarks,
@@ -37,32 +34,57 @@ function formatDate(iso: string) {
 }
 
 // ---------------------------------------------------------------------------
-// Sub-components
+// Moderation tab
 // ---------------------------------------------------------------------------
 
-// ── Moderation ──────────────────────────────────────────────────────────────
-
-function ModerationDashboard() {
-  const [items, setItems] = useState<PendingResource[]>(MOCK_PENDING);
+function ModerationDashboard({
+  initialPending,
+  initialResources,
+}: {
+  initialPending: PendingResource[];
+  initialResources: Resource[];
+}) {
+  const [items, setItems] = useState<PendingResource[]>(initialPending);
+  const [resources, setResources] = useState<Resource[]>(initialResources);
   const [rejectTarget, setRejectTarget] = useState<string | null>(null);
   const [selectedReason, setSelectedReason] = useState<RejectReason>("low_quality");
 
   const pending = items.filter((i) => i.status === "pending");
   const reviewed = items.filter((i) => i.status !== "pending");
 
-  function approve(id: string) {
-    setItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, status: "approved" } : i))
-    );
+  async function approve(id: string) {
+    try {
+      const res = await fetch(`/api/resources/pending/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "approve" }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setItems((prev) =>
+        prev.map((i) => (i.id === id ? { ...i, status: "approved" } : i))
+      );
+    } catch (err) {
+      console.error("approve failed", err);
+    }
   }
 
-  function reject(id: string) {
-    setItems((prev) =>
-      prev.map((i) =>
-        i.id === id ? { ...i, status: "rejected", rejectReason: selectedReason } : i
-      )
-    );
-    setRejectTarget(null);
+  async function reject(id: string) {
+    try {
+      const res = await fetch(`/api/resources/pending/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reject", reason: selectedReason }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setItems((prev) =>
+        prev.map((i) =>
+          i.id === id ? { ...i, status: "rejected", rejectReason: selectedReason } : i
+        )
+      );
+      setRejectTarget(null);
+    } catch (err) {
+      console.error("reject failed", err);
+    }
   }
 
   return (
@@ -126,14 +148,18 @@ function ModerationDashboard() {
                     <span className="text-xs text-gray-400 shrink-0">Reason:</span>
                     <select
                       value={selectedReason}
-                      onChange={(e) => setSelectedReason(e.target.value as RejectReason)}
+                      onChange={(e) =>
+                        setSelectedReason(e.target.value as RejectReason)
+                      }
                       className="rounded-lg border border-white/10 bg-tech-darker text-xs text-white px-2 py-1.5 outline-none focus:border-brand-cyan/50"
                     >
-                      {(Object.keys(REJECT_REASON_LABELS) as RejectReason[]).map((key) => (
-                        <option key={key} value={key}>
-                          {REJECT_REASON_LABELS[key]}
-                        </option>
-                      ))}
+                      {(Object.keys(REJECT_REASON_LABELS) as RejectReason[]).map(
+                        (key) => (
+                          <option key={key} value={key}>
+                            {REJECT_REASON_LABELS[key]}
+                          </option>
+                        )
+                      )}
                     </select>
                     <button
                       onClick={() => reject(item.id)}
@@ -186,37 +212,76 @@ function ModerationDashboard() {
       {/* Existing resource management */}
       <div>
         <h3 className="text-base font-semibold text-white mb-3">Manage Existing Resources</h3>
-        <ExistingResourcesTable />
+        <ExistingResourcesTable
+          initialResources={resources}
+          onResourcesChange={setResources}
+        />
       </div>
     </div>
   );
 }
 
-function ExistingResourcesTable() {
-  const [resources, setResources] = useState<Resource[]>(MOCK_RESOURCES);
+function ExistingResourcesTable({
+  initialResources,
+  onResourcesChange,
+}: {
+  initialResources: Resource[];
+  onResourcesChange: (r: Resource[]) => void;
+}) {
+  const [resources, setResources] = useState<Resource[]>(initialResources);
   const [editId, setEditId] = useState<string | null>(null);
   const [editDesc, setEditDesc] = useState("");
+
+  function sync(next: Resource[]) {
+    setResources(next);
+    onResourcesChange(next);
+  }
 
   function startEdit(r: Resource) {
     setEditId(r.id);
     setEditDesc(r.description);
   }
 
-  function saveEdit(id: string) {
-    setResources((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, description: editDesc } : r))
-    );
-    setEditId(null);
+  async function saveEdit(id: string) {
+    try {
+      const res = await fetch(`/api/resources/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description: editDesc }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      sync(resources.map((r) => (r.id === id ? { ...r, description: editDesc } : r)));
+      setEditId(null);
+    } catch (err) {
+      console.error("saveEdit failed", err);
+    }
   }
 
-  function togglePin(id: string) {
-    setResources((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, pinned: !r.pinned } : r))
-    );
+  async function togglePin(id: string) {
+    const resource = resources.find((r) => r.id === id);
+    if (!resource) return;
+    const nextPinned = !resource.pinned;
+    try {
+      const res = await fetch(`/api/resources/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pinned: nextPinned }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      sync(resources.map((r) => (r.id === id ? { ...r, pinned: nextPinned } : r)));
+    } catch (err) {
+      console.error("togglePin failed", err);
+    }
   }
 
-  function deleteResource(id: string) {
-    setResources((prev) => prev.filter((r) => r.id !== id));
+  async function deleteResource(id: string) {
+    try {
+      const res = await fetch(`/api/resources/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(await res.text());
+      sync(resources.filter((r) => r.id !== id));
+    } catch (err) {
+      console.error("deleteResource failed", err);
+    }
   }
 
   return (
@@ -296,32 +361,52 @@ function ExistingResourcesTable() {
   );
 }
 
-// ── Curation ─────────────────────────────────────────────────────────────────
+// ---------------------------------------------------------------------------
+// Curation tab
+// ---------------------------------------------------------------------------
 
-function CurationTools() {
-  const [collections, setCollections] = useState<FeaturedCollection[]>(MOCK_COLLECTIONS);
+function CurationTools({
+  initialCollections,
+  allResources,
+}: {
+  initialCollections: FeaturedCollection[];
+  allResources: Resource[];
+}) {
+  const [collections, setCollections] = useState<FeaturedCollection[]>(initialCollections);
   const [creating, setCreating] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
 
-  function addCollection() {
+  async function addCollection() {
     if (!newTitle.trim()) return;
-    setCollections((prev) => [
-      ...prev,
-      {
-        id: `c${Date.now()}`,
-        title: newTitle.trim(),
-        description: newDesc.trim(),
-        resourceIds: [],
-      },
-    ]);
-    setNewTitle("");
-    setNewDesc("");
-    setCreating(false);
+    try {
+      const res = await fetch("/api/resources/collections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newTitle.trim(), description: newDesc.trim() }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const { id } = await res.json() as { id: string };
+      setCollections((prev) => [
+        ...prev,
+        { id, title: newTitle.trim(), description: newDesc.trim(), resourceIds: [] },
+      ]);
+      setNewTitle("");
+      setNewDesc("");
+      setCreating(false);
+    } catch (err) {
+      console.error("addCollection failed", err);
+    }
   }
 
-  function deleteCollection(id: string) {
-    setCollections((prev) => prev.filter((c) => c.id !== id));
+  async function deleteCollection(id: string) {
+    try {
+      const res = await fetch(`/api/resources/collections/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(await res.text());
+      setCollections((prev) => prev.filter((c) => c.id !== id));
+    } catch (err) {
+      console.error("deleteCollection failed", err);
+    }
   }
 
   return (
@@ -375,7 +460,7 @@ function CurationTools() {
 
         <div className="space-y-3">
           {collections.map((col) => {
-            const colResources = MOCK_RESOURCES.filter((r) =>
+            const colResources = allResources.filter((r) =>
               col.resourceIds.includes(r.id)
             );
             return (
@@ -410,25 +495,27 @@ function CurationTools() {
       {/* Pinned resources summary */}
       <div>
         <h3 className="text-base font-semibold text-white mb-3">Pinned Resources</h3>
-        {MOCK_RESOURCES.filter((r) => r.pinned).length === 0 ? (
+        {allResources.filter((r) => r.pinned).length === 0 ? (
           <p className="text-sm text-gray-500">
-            No resources are pinned yet. Pin a resource from the Moderation tab to surface it at
-            the top of its category.
+            No resources are pinned yet. Pin a resource from the Moderation tab to
+            surface it at the top of its category.
           </p>
         ) : (
           <div className="space-y-2">
-            {MOCK_RESOURCES.filter((r) => r.pinned).map((r) => (
-              <div
-                key={r.id}
-                className="flex items-center gap-3 rounded-xl border border-brand-cyan/20 bg-brand-cyan/5 px-4 py-3"
-              >
-                <span className="text-brand-cyan">📌</span>
-                <div className="min-w-0">
-                  <p className="text-sm text-white truncate">{r.title}</p>
-                  <p className="text-xs text-gray-400">{r.category}</p>
+            {allResources
+              .filter((r) => r.pinned)
+              .map((r) => (
+                <div
+                  key={r.id}
+                  className="flex items-center gap-3 rounded-xl border border-brand-cyan/20 bg-brand-cyan/5 px-4 py-3"
+                >
+                  <span className="text-brand-cyan">📌</span>
+                  <div className="min-w-0">
+                    <p className="text-sm text-white truncate">{r.title}</p>
+                    <p className="text-xs text-gray-400">{r.category}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         )}
       </div>
@@ -436,12 +523,14 @@ function CurationTools() {
   );
 }
 
-// ── Analytics ────────────────────────────────────────────────────────────────
+// ---------------------------------------------------------------------------
+// Analytics tab
+// ---------------------------------------------------------------------------
 
-function AnalyticsDashboard() {
-  const topViewed = getTopByViews(5);
-  const topBookmarked = getTopByBookmarks(5);
-  const topCommented = getTopByComments(5);
+function AnalyticsDashboard({ resources }: { resources: Resource[] }) {
+  const topViewed = getTopByViews(5, resources);
+  const topBookmarked = getTopByBookmarks(5, resources);
+  const topCommented = getTopByComments(5, resources);
 
   return (
     <div className="space-y-8">
@@ -508,7 +597,9 @@ function AnalyticsSection({
             <div key={r.id} className="space-y-1">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="shrink-0 text-xs font-bold text-gray-500 w-4">{i + 1}</span>
+                  <span className="shrink-0 text-xs font-bold text-gray-500 w-4">
+                    {i + 1}
+                  </span>
                   <p className="text-sm text-white truncate">{r.title}</p>
                 </div>
                 <span className="shrink-0 text-xs text-gray-400">
@@ -535,6 +626,9 @@ function AnalyticsSection({
 
 interface ResourcesAdminClientProps {
   session: Session;
+  initialResources: Resource[];
+  initialPending: PendingResource[];
+  initialCollections: FeaturedCollection[];
 }
 
 const TABS: { id: AdminTab; label: string; emoji: string }[] = [
@@ -543,9 +637,16 @@ const TABS: { id: AdminTab; label: string; emoji: string }[] = [
   { id: "analytics", label: "Analytics", emoji: "📊" },
 ];
 
-export function ResourcesAdminClient({ session }: ResourcesAdminClientProps) {
+export function ResourcesAdminClient({
+  session,
+  initialResources,
+  initialPending,
+  initialCollections,
+}: ResourcesAdminClientProps) {
   const [tab, setTab] = useState<AdminTab>("moderation");
-  const pendingCount = MOCK_PENDING.filter((p) => p.status === "pending").length;
+  const [resources, setResources] = useState<Resource[]>(initialResources);
+
+  const pendingCount = initialPending.filter((p) => p.status === "pending").length;
 
   return (
     <div className="min-h-screen bg-tech-dark text-white">
@@ -590,18 +691,18 @@ export function ResourcesAdminClient({ session }: ResourcesAdminClientProps) {
               <p className="text-xs text-gray-400">Pending</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-center">
-              <p className="text-xl font-bold text-white">{MOCK_RESOURCES.length}</p>
+              <p className="text-xl font-bold text-white">{resources.length}</p>
               <p className="text-xs text-gray-400">Resources</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-center">
-              <p className="text-xl font-bold text-white">{MOCK_COLLECTIONS.length}</p>
+              <p className="text-xl font-bold text-white">{initialCollections.length}</p>
               <p className="text-xs text-gray-400">Collections</p>
             </div>
           </div>
         </div>
 
         {/* Tab nav */}
-        <div className="flex gap-1 mb-6 border-b border-white/10 pb-0">
+        <div className="flex gap-1 mb-6 border-b border-white/10">
           {TABS.map(({ id, label, emoji }) => (
             <button
               key={id}
@@ -628,9 +729,19 @@ export function ResourcesAdminClient({ session }: ResourcesAdminClientProps) {
 
         {/* Tab content */}
         <div>
-          {tab === "moderation" && <ModerationDashboard />}
-          {tab === "curation" && <CurationTools />}
-          {tab === "analytics" && <AnalyticsDashboard />}
+          {tab === "moderation" && (
+            <ModerationDashboard
+              initialPending={initialPending}
+              initialResources={resources}
+            />
+          )}
+          {tab === "curation" && (
+            <CurationTools
+              initialCollections={initialCollections}
+              allResources={resources}
+            />
+          )}
+          {tab === "analytics" && <AnalyticsDashboard resources={resources} />}
         </div>
       </main>
     </div>

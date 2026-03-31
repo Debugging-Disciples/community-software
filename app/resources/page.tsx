@@ -2,24 +2,16 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ResourcesClient } from "@/components/ResourcesClient";
+import { getResources, seedResourcesIfEmpty } from "@/lib/firestore/resources";
+import { isAdminUser } from "@/lib/admin";
+import { MOCK_RESOURCES } from "@/lib/resources";
+import type { Resource } from "@/lib/resources";
 
 export const metadata = {
   title: "Resources Hub | Debugging Disciples",
   description:
     "Curated articles, books, podcasts, and more for the Debugging Disciples community.",
 };
-
-/**
- * Mock admin check — in production, look up the user's role from the database.
- * Only "Leader" and "Admin" roles may access admin controls.
- */
-function isAdminUser(userId: string | undefined): boolean {
-  const ADMIN_IDS = (process.env.ADMIN_USER_IDS ?? "").split(",").filter(Boolean);
-  if (ADMIN_IDS.length > 0 && userId) {
-    return ADMIN_IDS.includes(userId);
-  }
-  return process.env.NODE_ENV !== "production";
-}
 
 export default async function ResourcesPage() {
   const session = await getServerSession(authOptions);
@@ -30,5 +22,19 @@ export default async function ResourcesPage() {
 
   const userId = (session.user as { id?: string }).id;
 
-  return <ResourcesClient session={session} isAdmin={isAdminUser(userId)} />;
+  let resources: Resource[] = MOCK_RESOURCES;
+  try {
+    await seedResourcesIfEmpty();
+    resources = await getResources();
+  } catch {
+    // Firestore unavailable — fall back to mock data so the page still renders.
+  }
+
+  return (
+    <ResourcesClient
+      session={session}
+      isAdmin={isAdminUser(userId)}
+      initialResources={resources}
+    />
+  );
 }

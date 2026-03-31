@@ -330,20 +330,20 @@ export const MOCK_COLLECTIONS: FeaturedCollection[] = [
 // ---------------------------------------------------------------------------
 
 /** Returns the top N resources by views */
-export function getTopByViews(n: number): Resource[] {
-  return [...MOCK_RESOURCES].sort((a, b) => b.views - a.views).slice(0, n);
+export function getTopByViews(n: number, resources: Resource[] = MOCK_RESOURCES): Resource[] {
+  return [...resources].sort((a, b) => b.views - a.views).slice(0, n);
 }
 
 /** Returns the top N resources by bookmarks */
-export function getTopByBookmarks(n: number): Resource[] {
-  return [...MOCK_RESOURCES]
+export function getTopByBookmarks(n: number, resources: Resource[] = MOCK_RESOURCES): Resource[] {
+  return [...resources]
     .sort((a, b) => (b.bookmarks ?? 0) - (a.bookmarks ?? 0))
     .slice(0, n);
 }
 
 /** Returns the top N resources by comments */
-export function getTopByComments(n: number): Resource[] {
-  return [...MOCK_RESOURCES]
+export function getTopByComments(n: number, resources: Resource[] = MOCK_RESOURCES): Resource[] {
+  return [...resources]
     .sort((a, b) => (b.comments ?? 0) - (a.comments ?? 0))
     .slice(0, n);
 }

@@ -3,13 +3,18 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { getTopByViews } from "@/lib/resources";
+import type { Resource } from "@/lib/resources";
 
-const TOP_RESOURCES = getTopByViews(3);
+interface TrendingResourcesWidgetProps {
+  resources: Resource[];
+}
 
-export function TrendingResourcesWidget() {
+export function TrendingResourcesWidget({ resources }: TrendingResourcesWidgetProps) {
   const [current, setCurrent] = useState(0);
-  const resource = TOP_RESOURCES[current];
+
+  if (resources.length === 0) return null;
+
+  const resource = resources[current];
 
   return (
     <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-brand-cyan/5 to-brand-purple/5 overflow-hidden">
@@ -71,9 +76,9 @@ export function TrendingResourcesWidget() {
         </div>
 
         {/* Carousel dots */}
-        {TOP_RESOURCES.length > 1 && (
+        {resources.length > 1 && (
           <div className="flex items-center justify-center gap-2 mt-4">
-            {TOP_RESOURCES.map((_, i) => (
+            {resources.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
